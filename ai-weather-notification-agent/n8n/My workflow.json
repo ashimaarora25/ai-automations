@@ -1,0 +1,319 @@
+{
+  "name": "My workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 6
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        0,
+        64
+      ],
+      "id": "2e8f04c6-2943-415b-9728-c4869a7e3b6c",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "format": "imperial",
+        "locationSelection": "zipCode",
+        "zipCode": "07067"
+      },
+      "type": "n8n-nodes-base.openWeatherMap",
+      "typeVersion": 1,
+      "position": [
+        224,
+        64
+      ],
+      "id": "addce558-5e36-4877-99a7-06c4d7be7e60",
+      "name": "OpenWeatherMap",
+      "credentials": {
+        "openWeatherMapApi": {
+          "id": "qVUMji6lRMpw5uUR",
+          "name": "OpenWeatherMap account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list",
+          "cachedResultName": "GPT-4O-MINI"
+        },
+        "responses": {
+          "values": [
+            {
+              "role": "system",
+              "content": "You are a helpful assistant that writes concise daily weather summaries. In your response, make sure to generate two distinct sections \"Subject:\" and \"Body:\" Don't sign off the email or include asterics for formatting."
+            },
+            {
+              "content": "=Using the weather data below, generate:\nA short email subject line (max 10 words)\nA friendly daily weather email body (max 120 words)\nEnd the message with something motivational for the day. \n\nWeather data: \nCurrent Temperature: {{ $json.main.temp }}\nFeels like: {{ $json.main.feels_like }}\nMin temp:{{ $json.main.temp_min }} Max temp: {{ $json.main.temp_max }}\nWind Speed: {{ $json.wind.speed }}\nCloudy: {{ $json.clouds }}"
+            }
+          ]
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2.1,
+      "position": [
+        672,
+        -32
+      ],
+      "id": "f1a6628e-f58c-4736-9a9d-7b860bf1be21",
+      "name": "Message a model",
+      "credentials": {
+        "openAiApi": {
+          "id": "akdyzNJqfjPmPc7N",
+          "name": "n8n free OpenAI API credits"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "ashimaarora63@gmail.com",
+        "subject": "={{ $json[\"subject\"] }}",
+        "emailType": "text",
+        "message": "={{ $json[\"body\"] }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        1248,
+        -32
+      ],
+      "id": "f6f0d1dc-47c8-4eb2-9584-cf4d6a38416a",
+      "name": "Send a message",
+      "webhookId": "bc2dbb88-b79c-412a-af4a-8adedd2efaf2",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "6YTFfrv7DtDk4L8e",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const text = $input.first().json.output[0].content[0].text\n\nconst subjectMatch = text.match(/subject\\s*:\\s*(.+)/i);\nconst bodyMatch = text.match(/body\\s*:\\s*([\\s\\S]+)/i);\n\n\nreturn [\n  {\n    subject: subjectMatch ? subjectMatch[1].trim() : \"Daily Weather Update\",\n    body: bodyMatch ? bodyMatch[1].trim() : text\n  }\n];  \n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1024,
+        -32
+      ],
+      "id": "313091f1-3e83-4255-93cd-4332a46b7c39",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "9fc73923-96e9-4c88-a8f1-5899b02953c9",
+              "leftValue": "={{$json.main.temp}}",
+              "rightValue": "",
+              "operator": {
+                "type": "number",
+                "operation": "exists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        448,
+        64
+      ],
+      "id": "89d060fa-8aaf-44fd-9741-f5fed205e1b2",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "sendTo": "ashimaarora63@gmail.com",
+        "subject": "Daily Weather Update (Unavailable)",
+        "emailType": "text",
+        "message": "Today's weather summary could not be generated due to a temporary data provider issue. Normal updates will resume tomorrow.",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        1024,
+        160
+      ],
+      "id": "2bf701cc-fdd3-4b41-a27e-2d800028f837",
+      "name": "Send a message1",
+      "webhookId": "1a98c200-1f7c-4516-8025-a0df5ae6c7f2",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "6YTFfrv7DtDk4L8e",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "5b24b29f-96e0-4744-b14c-d48d5d9d3418",
+              "name": "error_type",
+              "value": "weather_api_failure",
+              "type": "string"
+            },
+            {
+              "id": "5e27dd14-ecc5-4844-b2f7-590972d686ee",
+              "name": "timestamp",
+              "value": "={{ $now }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        736,
+        160
+      ],
+      "id": "d9faf07e-5a97-4c1a-a604-28619c7657aa",
+      "name": "Edit Fields"
+    }
+  ],
+  "pinData": {
+    "Schedule Trigger": [
+      {
+        "json": {
+          "timestamp": "2025-12-22T06:47:27.273-05:00",
+          "Readable date": "December 22nd 2025, 6:47:27 am",
+          "Readable time": "6:47:27 am",
+          "Day of week": "Monday",
+          "Year": "2025",
+          "Month": "December",
+          "Day of month": "22",
+          "Hour": "06",
+          "Minute": "47",
+          "Second": "27",
+          "Timezone": "America/New_York (UTC-05:00)"
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ]
+  },
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "OpenWeatherMap",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenWeatherMap": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Message a model": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a message": {
+      "main": [
+        []
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Message a model",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Send a message1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "5846c7c5-f6bb-4f9e-9739-df4429982fba",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "53e81a6762c75c3af86dc8ba919868c721d324ef772df609ef990d35c24fe150"
+  },
+  "id": "Mtuo8jmgCSX4vWxI",
+  "tags": []
+}
