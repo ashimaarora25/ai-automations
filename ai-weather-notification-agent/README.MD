@@ -1,2 +1,2 @@
-Scheduled Trigger -> Weather API → success -> OpenAI -> Parser -> Gmail
-                                ↘ failure -> fallback email
+Scheduled Trigger -> Weather API → On success -> OpenAI -> Parser -> Gmail
+                                 ↘ On failure -> fallback email
